@@ -1,65 +1,162 @@
-import Image from "next/image";
+import Link from "next/link";
+import { LandingHero } from "@/components/landing/LandingHero";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div style={{ background: "var(--bg-primary)" }}>
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-6 z-50" style={{ background: "var(--bg-primary)" }}>
+        <span
+          className="text-lg tracking-[0.25em] uppercase"
+          style={{
+            color: "var(--text-primary)",
+            fontFamily: "var(--font-rajdhani), sans-serif",
+            fontWeight: 700,
+          }}
+        >
+          unearthed
+        </span>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/login"
+            className="text-sm"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Log in
+          </Link>
+          <Link
+            href="/discover"
+            className="px-4 py-2 rounded-lg text-sm font-semibold"
+            style={{ background: "var(--accent-primary)", color: "white" }}
+          >
+            Get Started
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <LandingHero />
+
+      {/* How it works */}
+      <section className="px-6 py-20 max-w-4xl mx-auto">
+        <h2
+          className="text-2xl md:text-3xl font-bold text-center mb-12"
+          style={{ color: "var(--text-primary)" }}
+        >
+          How it works
+        </h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              step: "01",
+              title: "Open a pack",
+              description:
+                "Choose from three pack types and reveal 5 curated websites hand-picked for your interests.",
+            },
+            {
+              step: "02",
+              title: "Keep your favorites",
+              description:
+                "Swipe through the cards, preview each site, and keep up to 3 that catch your eye.",
+            },
+            {
+              step: "03",
+              title: "Build your collection",
+              description:
+                "Organize finds into boards, share them publicly, and discover what others have found.",
+            },
+          ].map((item) => (
+            <div key={item.step} className="text-center">
+              <div
+                className="text-4xl font-bold mb-3"
+                style={{ color: "var(--accent-primary)", opacity: 0.5 }}
+              >
+                {item.step}
+              </div>
+              <h3
+                className="text-lg font-semibold mb-2"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {item.title}
+              </h3>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {item.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Positioning */}
+      <section className="px-6 py-20" style={{ background: "var(--bg-surface)" }}>
+        <div className="max-w-2xl mx-auto text-center">
+          <h2
+            className="text-2xl md:text-3xl font-bold mb-6"
+            style={{ color: "var(--text-primary)" }}
+          >
+            The internet used to be fun to explore
+          </h2>
+          <p
+            className="text-base leading-relaxed mb-4"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            No algorithms. No infinite scroll. No AI-generated filler. Just
+            interesting websites, one pack at a time.
+          </p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Every site in Unearth is reviewed for quality by real humans. We
+            score for originality, design, and authentic human presence.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 py-20 text-center">
+        <h2
+          className="text-2xl md:text-3xl font-bold mb-4"
+          style={{ color: "var(--text-primary)" }}
+        >
+          Ready to explore?
+        </h2>
+        <p className="text-sm mb-8" style={{ color: "var(--text-secondary)" }}>
+          Open your first pack and discover websites you&apos;d never find on
+          your own.
+        </p>
+        <Link
+          href="/discover"
+          className="inline-block px-8 py-3 rounded-xl text-base font-bold"
+          style={{
+            background: "var(--accent-primary)",
+            color: "white",
+            boxShadow: "0 8px 32px rgba(233, 69, 96, 0.4)",
+          }}
+        >
+          Start Exploring
+        </Link>
+      </section>
+
+      {/* Footer */}
+      <footer
+        className="px-6 py-8 text-center"
+        style={{ borderTop: "1px solid var(--border-subtle)" }}
+      >
+        <span
+          className="text-sm tracking-[0.15em] uppercase"
+          style={{
+            color: "var(--text-muted)",
+            fontFamily: "var(--font-rajdhani), sans-serif",
+            fontWeight: 600,
+          }}
+        >
+          unearthed
+        </span>
+        <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
+          Unearth the internet.
+        </p>
+      </footer>
     </div>
   );
 }

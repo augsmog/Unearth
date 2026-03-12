@@ -1,26 +1,142 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Unearth Design System */
+  --bg-primary: #1A1A2E;
+  --bg-surface: #16213E;
+  --bg-elevated: #252542;
+  --accent-primary: #E94560;
+  --accent-secondary: #0F3460;
+  --accent-gold: #FFD700;
+  --accent-purple: #7B2FBE;
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0C8;
+  --text-muted: #6B6B8D;
+  --success: #4ADE80;
+  --border-subtle: #2D2D44;
+
+  /* Spacing tokens */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Border radius tokens */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* shadcn/ui tokens */
+  --background: #1A1A2E;
+  --foreground: #FFFFFF;
+  --card: #16213E;
+  --card-foreground: #FFFFFF;
+  --popover: #252542;
+  --popover-foreground: #FFFFFF;
+  --primary: #E94560;
+  --primary-foreground: #FFFFFF;
+  --secondary: #0F3460;
+  --secondary-foreground: #FFFFFF;
+  --muted: #252542;
+  --muted-foreground: #6B6B8D;
+  --accent: #252542;
+  --accent-foreground: #FFFFFF;
+  --destructive: #d4183d;
+  --destructive-foreground: #FFFFFF;
+  --border: #2D2D44;
+  --input: #2D2D44;
+  --ring: #E94560;
+  --chart-1: #E94560;
+  --chart-2: #FFD700;
+  --chart-3: #7B2FBE;
+  --chart-4: #4ADE80;
+  --chart-5: #00D4FF;
+  --radius: 0.75rem;
+  --sidebar: #16213E;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #E94560;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #252542;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #2D2D44;
+  --sidebar-ring: #E94560;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-rajdhani);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
 }
