@@ -301,11 +301,16 @@ export async function getNextInChain(
     let noveltyWeight = 0.1;
     if (depth >= 7) noveltyWeight = 0.2;
 
-    const chainScore =
+    let chainScore =
       (0.4 * edgeWeight) +
       (0.3 * interestMatch) +
       ((0.3 - noveltyWeight) * formatAffinity) +
       (noveltyWeight * noveltyBonus);
+
+    // Small boost for sites with proven aggregate engagement
+    if (candidate.engagement_view_count >= 3 && (candidate.engagement_avg_time_ms ?? 0) > 15_000) {
+      chainScore += 0.05;
+    }
 
     return { site: candidate, chainScore, edgeWeight };
   });

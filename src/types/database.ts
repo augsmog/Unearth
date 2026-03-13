@@ -72,6 +72,11 @@ export interface Site {
   cold_open_score: number | null;
   engagement_format: EngagementFormat | null;
   rabbit_hole_depth_potential: number;
+  engagement_view_count: number;
+  engagement_avg_time_ms: number;
+  impression_count: number;
+  keep_count: number;
+  rabbit_hole_save_count: number;
   created_at: string;
   approved_at: string | null;
 }

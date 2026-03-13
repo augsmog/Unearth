@@ -54,13 +54,68 @@ export async function GET(request: NextRequest) {
     // Inject <base> tag so relative URLs resolve against the original domain
     const baseTag = `<base href="${parsed.origin}${parsed.pathname.replace(/\/[^/]*$/, '/')}">`;
 
+    // Navigation tracking script: reports when user navigates within the proxied page
+    // This enables automatic page discovery — if a user navigates from a page to
+    // another page on the same site and engages with it, we can add it to our pipeline
+    const navTracker = `<script data-unearth-tracker>
+(function() {
+  var origin = ${JSON.stringify(parsed.origin)};
+  var initialPath = location.pathname;
+  var lastReported = initialPath;
+
+  // Report navigation to parent
+  function reportNav(url, title) {
+    try {
+      window.parent.postMessage({
+        type: 'unearth:navigation',
+        url: url,
+        title: title || document.title,
+        origin: origin
+      }, '*');
+    } catch(e) {}
+  }
+
+  // Intercept link clicks on same-origin links
+  document.addEventListener('click', function(e) {
+    var a = e.target;
+    while (a && a.tagName !== 'A') a = a.parentElement;
+    if (!a || !a.href) return;
+    try {
+      var linkUrl = new URL(a.href, origin);
+      if (linkUrl.origin === origin && linkUrl.pathname !== initialPath) {
+        reportNav(linkUrl.href, a.textContent);
+      }
+    } catch(e) {}
+  }, true);
+
+  // Detect pushState/replaceState navigation (SPAs)
+  var origPush = history.pushState;
+  var origReplace = history.replaceState;
+  history.pushState = function() {
+    origPush.apply(this, arguments);
+    checkNav();
+  };
+  history.replaceState = function() {
+    origReplace.apply(this, arguments);
+    checkNav();
+  };
+  window.addEventListener('popstate', checkNav);
+
+  function checkNav() {
+    if (location.pathname !== lastReported) {
+      lastReported = location.pathname;
+      reportNav(origin + location.pathname + location.search, document.title);
+    }
+  }
+})();
+</script>`;
+
     if (html.includes('<head>')) {
-      html = html.replace('<head>', `<head>${baseTag}`);
+      html = html.replace('<head>', `<head>${baseTag}${navTracker}`);
     } else if (html.includes('<HEAD>')) {
-      html = html.replace('<HEAD>', `<HEAD>${baseTag}`);
+      html = html.replace('<HEAD>', `<HEAD>${baseTag}${navTracker}`);
     } else {
-      // No <head> tag — prepend base tag
-      html = baseTag + html;
+      html = baseTag + navTracker + html;
     }
 
     return new NextResponse(html, {

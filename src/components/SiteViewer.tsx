@@ -85,6 +85,32 @@ export function SiteViewer({
 
   const showFallback = iframeFailed || (useProxy && proxyFailed);
 
+  // Listen for navigation events from proxied iframes
+  // When users navigate to new pages within a site, report them as discovered pages
+  const discoveredPages = useRef(new Set<string>());
+  useEffect(() => {
+    if (!isOpen || !useProxy) return;
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type !== 'unearth:navigation') return;
+      const { url, title } = event.data as { url: string; title: string };
+      if (!url || discoveredPages.current.has(url)) return;
+      discoveredPages.current.add(url);
+      // Report discovered page to pipeline (fire-and-forget)
+      fetch('/api/pipeline/discover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          title: title || '',
+          sourceSiteId: site.id,
+          sourceUrl: site.url,
+        }),
+      }).catch(() => {});
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [isOpen, useProxy, site.id, site.url]);
+
   // Report embeddability to the server when we determine it
   const reportedRef = useRef(false);
   useEffect(() => {
