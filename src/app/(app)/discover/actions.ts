@@ -32,16 +32,17 @@ export async function generatePack() {
 
   const seenSiteIds = seenPacks?.flatMap((p) => p.site_ids) ?? [];
 
-  // Query approved sites that have screenshots, preferring those matching interests
+  // Query approved pages that have screenshots
+  // Prefer embeddable pages (iframe_compatible = true or untested)
   let query = adminClient
     .from("sites")
     .select("*")
     .eq("status", "approved")
     .not("thumbnail_url", "is", null)
     .order("quality_score", { ascending: false })
-    .limit(50);
+    .limit(80);
 
-  // Exclude already seen sites
+  // Exclude already seen pages
   if (seenSiteIds.length > 0) {
     query = query.not("id", "in", `(${seenSiteIds.join(",")})`);
   }
@@ -49,17 +50,17 @@ export async function generatePack() {
   const { data: candidates } = await query;
 
   if (!candidates || candidates.length < 5) {
-    // Not enough unseen sites — allow repeats (still require screenshots)
+    // Not enough unseen pages — allow repeats
     const { data: fallback } = await adminClient
       .from("sites")
       .select("*")
       .eq("status", "approved")
       .not("thumbnail_url", "is", null)
       .order("quality_score", { ascending: false })
-      .limit(50);
+      .limit(80);
 
     const pool = fallback ?? [];
-    const selected = weightedRandomSample(pool, 5, interests);
+    const selected = diverseWeightedSample(pool, 5, interests);
 
     const { data: pack } = await adminClient
       .from("packs")
@@ -73,7 +74,7 @@ export async function generatePack() {
     return { pack, sites: selected, limitReached: false };
   }
 
-  const selected = weightedRandomSample(candidates, 5, interests);
+  const selected = diverseWeightedSample(candidates, 5, interests);
 
   const { data: pack } = await adminClient
     .from("packs")
@@ -303,21 +304,101 @@ export async function endRabbitHoleAction(rabbitHoleId: string) {
   await endRabbitHole(rabbitHoleId);
 }
 
-// Weighted random sampling — prefer sites matching user interests
+// ── Engagement Tracking ────────────────────────────────────────────
+
+export async function trackSiteEngagement(data: {
+  siteId: string;
+  timeSpentMs: number;
+  iframeLoaded: boolean;
+  usedProxy: boolean;
+}) {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  // Log page view for reuse tracking
+  try {
+    await adminClient.from('user_page_views').upsert(
+      {
+        user_id: user.id,
+        site_id: data.siteId,
+        time_spent_ms: data.timeSpentMs,
+        iframe_loaded: data.iframeLoaded,
+        source: 'pack',
+      },
+      { onConflict: 'user_id,site_id' }
+    );
+  } catch {
+    // Table may not exist yet if migration hasn't been run
+  }
+
+  // Update format affinity based on engagement signals
+  try {
+    const { updateFormatAffinity } = await import('@/lib/rabbitHole/formatAffinity');
+
+    // >10s = strong positive signal (they actually engaged)
+    // <3s = bounce (pass)
+    if (data.timeSpentMs > 10_000) {
+      await updateFormatAffinity(user.id, data.siteId, 'follow');
+    } else if (data.timeSpentMs < 3_000 && data.iframeLoaded) {
+      await updateFormatAffinity(user.id, data.siteId, 'pass');
+    }
+  } catch (err) {
+    console.error('Engagement tracking failed:', err);
+  }
+}
+
+/**
+ * Domain-diverse weighted sampling.
+ * - Max 2 pages per domain in a single pack (prevents "we only have 3 sites" feel)
+ * - Embeddable pages get a boost (they keep users on-platform)
+ * - Interest overlap still drives selection
+ * - Serendipity factor ensures variety
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function weightedRandomSample(candidates: any[], count: number, interests: string[]) {
+function diverseWeightedSample(candidates: any[], count: number, interests: string[]) {
   if (candidates.length <= count) return candidates;
 
-  // Score each candidate based on interest overlap
+  const MAX_PER_DOMAIN = 2;
+
+  // Score each candidate
   const scored = candidates.map((site) => {
     const categories = site.categories ?? [];
     const overlap = categories.filter((c: string) => interests.includes(c)).length;
-    // Weight: base 1 + 3 per interest match + serendipity factor
-    const weight = 1 + overlap * 3 + Math.random() * 2;
+
+    let weight = 1 + overlap * 3 + Math.random() * 2;
+
+    // Boost embeddable pages — they keep users inside Unearth
+    if (site.iframe_compatible === true) {
+      weight += 2;
+    }
+    // Slight penalty for confirmed non-embeddable pages
+    if (site.iframe_compatible === false) {
+      weight *= 0.6;
+    }
+    // Untested pages (null) get no modifier — will be tested on first view
+
     return { site, weight };
   });
 
-  // Sort by weight descending and take top N
+  // Sort by weight descending
   scored.sort((a, b) => b.weight - a.weight);
-  return scored.slice(0, count).map((s) => s.site);
+
+  // Select greedily, enforcing domain diversity
+  const selected: typeof scored = [];
+  const domainCounts = new Map<string, number>();
+
+  for (const entry of scored) {
+    if (selected.length >= count) break;
+
+    const domain = entry.site.domain ?? 'unknown';
+    const current = domainCounts.get(domain) ?? 0;
+
+    if (current >= MAX_PER_DOMAIN) continue; // skip — too many from this domain
+
+    selected.push(entry);
+    domainCounts.set(domain, current + 1);
+  }
+
+  return selected.map((s) => s.site);
 }

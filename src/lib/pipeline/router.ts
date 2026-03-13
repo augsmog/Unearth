@@ -61,8 +61,8 @@ export async function checkBlocklist(
       site_id: siteId,
       ai_score: 0,
       ai_dimensions: null,
-      decision: 'rejected',
-      decided_by: 'ai',
+      decision: 'reject',
+      decided_by: 'auto',
       founder_notes: 'Auto-rejected: mainstream domain blocklist',
     });
 
@@ -86,11 +86,20 @@ export async function processScoredSite(
   const status = toSiteStatus(decision);
   const outcome = toDecisionOutcome(decision);
 
+  // Map AI content likelihood to DB-valid values
+  // DB CHECK: 'low', 'medium', 'high' — collapse very_low→low, very_high→high
+  const dbLikelihood = (() => {
+    const l = scoringResult.ai_content_likelihood;
+    if (l === 'very_low') return 'low';
+    if (l === 'very_high') return 'high';
+    return l;
+  })();
+
   // Update site with scoring data
   const siteUpdate: Record<string, unknown> = {
     quality_score: scoringResult.overall_score,
     scoring_dimensions: scoringResult.dimensions,
-    ai_content_likelihood: scoringResult.ai_content_likelihood,
+    ai_content_likelihood: dbLikelihood,
     status,
   };
 
@@ -124,8 +133,8 @@ export async function processScoredSite(
       site_id: siteId,
       ai_score: scoringResult.overall_score,
       ai_dimensions: scoringResult.dimensions,
-      decision: outcome,
-      decided_by: 'ai',
+      decision: outcome === 'needs_review' ? 'approve' : (outcome === 'approved' ? 'approve' : 'reject'),
+      decided_by: 'auto', // DB CHECK: 'auto' | 'founder'
     });
 
   if (decisionError) {

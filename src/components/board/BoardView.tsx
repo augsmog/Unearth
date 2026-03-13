@@ -1,10 +1,14 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { motion } from "motion/react";
 import { Share2, ArrowLeft, Globe, Lock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import Masonry from "react-responsive-masonry";
+import { SiteViewer } from "@/components/SiteViewer";
+import type { EngagementData } from "@/components/SiteViewer";
+import { trackSiteEngagement } from "@/app/(app)/discover/actions";
 import type { Site, Board } from "@/types";
 
 interface BoardViewProps {
@@ -13,6 +17,8 @@ interface BoardViewProps {
 }
 
 export function BoardView({ board, sites }: BoardViewProps) {
+  const [previewSite, setPreviewSite] = useState<Site | null>(null);
+
   const handleShare = async () => {
     if (board.is_public) {
       await navigator.clipboard.writeText(
@@ -21,6 +27,10 @@ export function BoardView({ board, sites }: BoardViewProps) {
       alert("Link copied!");
     }
   };
+
+  const handleEngagement = useCallback((data: EngagementData) => {
+    trackSiteEngagement(data);
+  }, []);
 
   return (
     <div>
@@ -75,15 +85,14 @@ export function BoardView({ board, sites }: BoardViewProps) {
       {sites.length > 0 ? (
         <Masonry columnsCount={3} gutter="16px">
           {sites.map((site, index) => (
-            <motion.a
+            <motion.button
               key={site.id}
-              href={site.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              type="button"
+              onClick={() => setPreviewSite(site)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="block rounded-xl overflow-hidden transition-transform hover:scale-[1.02]"
+              className="block w-full rounded-xl overflow-hidden transition-transform hover:scale-[1.02] text-left cursor-pointer"
               style={{
                 background: "var(--bg-elevated)",
                 border: "1px solid var(--border-subtle)",
@@ -132,7 +141,7 @@ export function BoardView({ board, sites }: BoardViewProps) {
                   </div>
                 )}
               </div>
-            </motion.a>
+            </motion.button>
           ))}
         </Masonry>
       ) : (
@@ -154,6 +163,16 @@ export function BoardView({ board, sites }: BoardViewProps) {
             Open a Pack
           </Link>
         </div>
+      )}
+
+      {/* Embedded Site Viewer */}
+      {previewSite && (
+        <SiteViewer
+          site={previewSite}
+          isOpen={!!previewSite}
+          onClose={() => setPreviewSite(null)}
+          onEngagement={handleEngagement}
+        />
       )}
     </div>
   );

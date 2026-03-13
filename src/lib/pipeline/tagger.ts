@@ -51,17 +51,17 @@ const CONTENT_TYPES: ContentType[] = [
   'other',
 ];
 
-const TAGGING_PROMPT = `You are a metadata tagger for Unearth, a curated web discovery platform.
+const TAGGING_PROMPT = `You are a metadata tagger for Unearth, a curated web discovery platform that surfaces individual PAGES — not entire websites.
 
-Given a website URL and description, produce structured metadata.
+Given a page URL and its content, produce structured metadata about THIS SPECIFIC PAGE.
 
 ## Rules
 
 1. **categories**: Pick 2-3 from this taxonomy: ${TAXONOMY.join(', ')}
-2. **tags**: Generate 5-10 freeform descriptive tags (lowercase, hyphen-separated for multi-word)
+2. **tags**: Generate 5-10 freeform descriptive tags (lowercase, hyphen-separated for multi-word). Tag the specific page content, not the parent site.
 3. **contentType**: Pick exactly one from: ${CONTENT_TYPES.join(', ')}
-4. **description**: Write a compelling description of max 120 characters. Be specific and enticing.
-5. **adjacencyTags**: Generate 5-15 adjacency tags. These describe what this site is ADJACENT TO — not what it IS. Answer: "If someone liked this site, what other TOPICS, VIBES, or AUDIENCE TYPES would they also be interested in?" Example: A site about neural network visualizations might have tags: ['neural-networks', 'machine-learning', 'visualization'] but adjacencyTags: ['creative-coding', 'data-art', 'ai-research', 'computational-creativity', 'mathematics', 'generative-art', 'python-ecosystem']
+4. **description**: Write a compelling description of max 120 characters about what THIS PAGE offers. Be specific — mention the actual topic, not the site.
+5. **adjacencyTags**: Generate 5-15 adjacency tags. These describe what this page is ADJACENT TO — not what it IS. Answer: "If someone liked this page, what other TOPICS, VIBES, or AUDIENCE TYPES would they also be interested in?" Example: A page about neural network visualizations might have tags: ['neural-networks', 'machine-learning', 'visualization'] but adjacencyTags: ['creative-coding', 'data-art', 'ai-research', 'computational-creativity', 'mathematics', 'generative-art', 'python-ecosystem']
 
 ## Response Format
 

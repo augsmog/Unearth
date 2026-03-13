@@ -1,0 +1,78 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+/**
+ * Proxy route that fetches external pages and serves them with relaxed
+ * framing headers so they can load inside Unearth's iframe viewer.
+ *
+ * Injects a <base> tag so relative URLs (CSS, JS, images) resolve correctly
+ * against the original domain.
+ */
+export async function GET(request: NextRequest) {
+  const url = request.nextUrl.searchParams.get('url');
+
+  if (!url) {
+    return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 });
+  }
+
+  // Validate URL
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return NextResponse.json({ error: 'Invalid protocol' }, { status: 400 });
+    }
+  } catch {
+    return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; Unearth/1.0)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      signal: AbortSignal.timeout(15_000),
+      redirect: 'follow',
+    });
+
+    const contentType = response.headers.get('content-type') ?? 'text/html';
+
+    // For non-HTML content (images, CSS, JS), pass through directly
+    if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+      const body = await response.arrayBuffer();
+      return new NextResponse(body, {
+        status: response.status,
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=3600',
+        },
+      });
+    }
+
+    let html = await response.text();
+
+    // Inject <base> tag so relative URLs resolve against the original domain
+    const baseTag = `<base href="${parsed.origin}${parsed.pathname.replace(/\/[^/]*$/, '/')}">`;
+
+    if (html.includes('<head>')) {
+      html = html.replace('<head>', `<head>${baseTag}`);
+    } else if (html.includes('<HEAD>')) {
+      html = html.replace('<HEAD>', `<HEAD>${baseTag}`);
+    } else {
+      // No <head> tag — prepend base tag
+      html = baseTag + html;
+    }
+
+    return new NextResponse(html, {
+      status: response.status,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=300',
+        // Explicitly do NOT set X-Frame-Options or restrictive CSP
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Proxy fetch failed';
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
+}

@@ -32,10 +32,9 @@ export function WebsiteCard({ site, kept: keptProp, isKept, onToggle, onKeepTogg
   };
 
   const handlePreviewClick = () => {
+    // Always route through onPreview to open in embedded SiteViewer
     if (onPreview) {
       onPreview(site);
-    } else {
-      window.open(site.url, "_blank", "noopener,noreferrer");
     }
   };
 

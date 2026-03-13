@@ -1,8 +1,12 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { motion } from "motion/react";
 import { ChevronDown, Flame } from "lucide-react";
 import { WebsiteCard } from "@/components/pack/WebsiteCard";
+import { SiteViewer } from "@/components/SiteViewer";
+import type { EngagementData } from "@/components/SiteViewer";
+import { trackSiteEngagement } from "../actions";
 import type { Site } from "@/types";
 
 interface PostPackSummaryViewProps {
@@ -18,6 +22,16 @@ export function PostPackSummaryView({
   onOpenAnother,
   onDiveDeeper,
 }: PostPackSummaryViewProps) {
+  const [previewSite, setPreviewSite] = useState<Site | null>(null);
+
+  const handlePreview = useCallback((site: Site) => {
+    setPreviewSite(site);
+  }, []);
+
+  const handleEngagement = useCallback((data: EngagementData) => {
+    trackSiteEngagement(data);
+  }, []);
+
   return (
     <div className="px-4 min-h-[calc(100vh-3.5rem)] flex flex-col items-center justify-center">
       {/* Header text */}
@@ -52,7 +66,7 @@ export function PostPackSummaryView({
             transition={{ delay: 0.3 + index * 0.1 }}
             className="flex flex-col items-center gap-2"
           >
-            <WebsiteCard site={site} variant="face-up" isKept />
+            <WebsiteCard site={site} variant="face-up" isKept onPreview={handlePreview} />
             {onDiveDeeper && (site.categories ?? []).length > 0 && (
               <button
                 onClick={() => onDiveDeeper(site.id, site.categories[0])}
@@ -113,6 +127,17 @@ export function PostPackSummaryView({
           {streak}-day streak! You&apos;ve discovered {keptSites.length} sites
         </span>
       </motion.div>
+
+      {/* Embedded Site Viewer */}
+      {previewSite && (
+        <SiteViewer
+          site={previewSite}
+          isOpen={!!previewSite}
+          onClose={() => setPreviewSite(null)}
+          keepLabel="View"
+          onEngagement={handleEngagement}
+        />
+      )}
     </div>
   );
 }

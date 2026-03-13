@@ -11,6 +11,9 @@
  *   PIPELINE_API_KEY - API key for pipeline routes
  */
 
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
 const N8N_BASE_URL = process.env.N8N_BASE_URL!;
 const N8N_API_KEY = process.env.N8N_API_KEY!;
 const APP_BASE_URL = process.env.APP_BASE_URL!;

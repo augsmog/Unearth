@@ -2,7 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { SitePreviewModal } from "@/components/pack/SitePreviewModal";
+import { SiteViewer } from "@/components/SiteViewer";
+import type { EngagementData } from "@/components/SiteViewer";
+import { trackSiteEngagement } from "@/app/(app)/discover/actions";
 import type { Site } from "@/types";
 
 interface RabbitHoleViewProps {
@@ -40,6 +42,10 @@ export function RabbitHoleView({
     setSaved(prev => new Set(prev).add(siteId));
     onSave(siteId);
   }, [onSave]);
+
+  const handleEngagement = useCallback((data: EngagementData) => {
+    trackSiteEngagement(data);
+  }, []);
 
   return (
     <div className="flex flex-col gap-4 pb-24">
@@ -163,7 +169,7 @@ export function RabbitHoleView({
                 onClick={() => setPreviewSite(currentSite)}
                 className="flex-1 rounded-lg bg-[var(--accent-primary)] px-4 py-2.5 text-center text-sm font-semibold text-white hover:opacity-90 transition-opacity"
               >
-                Preview Site
+                Explore Site
               </button>
               {onSave ? (
                 <button
@@ -265,15 +271,16 @@ export function RabbitHoleView({
         Open a Pack instead
       </button>
 
-      {/* Site Preview Modal */}
+      {/* Embedded Site Viewer */}
       {previewSite && (
-        <SitePreviewModal
+        <SiteViewer
           site={previewSite}
           isOpen={!!previewSite}
           onClose={() => setPreviewSite(null)}
           onKeep={onSave ? () => handleSave(previewSite.id) : undefined}
           isKept={saved.has(previewSite.id)}
           keepLabel="Save"
+          onEngagement={handleEngagement}
         />
       )}
     </div>

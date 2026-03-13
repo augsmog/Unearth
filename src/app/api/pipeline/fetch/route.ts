@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert into sites table with status='pending'
+    // Try with domain column; fall back without if migration hasn't run
     const rows = newSites.map((site) => ({
       url: site.url,
       title: site.title,
@@ -111,16 +112,18 @@ export async function POST(request: NextRequest) {
       source: site.source,
       source_url: site.sourceUrl ?? null,
       status: 'pending' as const,
-      quality_score: 0,
+      quality_score: 1, // minimum valid score (CHECK constraint: 1-100)
       ai_content_likelihood: 'medium' as const,
       content_type: 'other' as const,
       categories: [],
       tags: [],
     }));
 
+    // Use upsert with ignoreDuplicates to handle race conditions
+    // where the same URL was inserted between our dedup check and now
     const { error, count } = await adminClient
       .from('sites')
-      .insert(rows);
+      .upsert(rows, { onConflict: 'url', ignoreDuplicates: true });
 
     if (error) {
       throw new Error(`DB insert failed: ${error.message}`);

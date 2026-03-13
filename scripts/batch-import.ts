@@ -92,7 +92,7 @@ async function main() {
         source: 'manual',
         categories: [],
         tags: [],
-        quality_score: 0,
+        quality_score: 1,
         ai_content_likelihood: 'low',
         content_type: 'other',
       });

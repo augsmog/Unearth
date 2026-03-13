@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "motion/react";
 import { usePackStore } from "@/stores/packStore";
 import { WebsiteCard } from "@/components/pack/WebsiteCard";
-import { SitePreviewModal } from "@/components/pack/SitePreviewModal";
+import { SiteViewer } from "@/components/SiteViewer";
+import type { EngagementData } from "@/components/SiteViewer";
 import { CounterDots } from "@/components/pack/CounterDots";
+import { trackSiteEngagement } from "../actions";
 import type { Site } from "@/types";
 
 interface CardSelectionViewProps {
@@ -41,6 +43,10 @@ export function CardSelectionView({ sites, onConfirm }: CardSelectionViewProps) 
     if (!previewSite) return;
     handleKeepToggle(previewSite.id);
   }, [previewSite, keptSiteIds]);
+
+  const handleEngagement = useCallback((data: EngagementData) => {
+    trackSiteEngagement(data);
+  }, []);
 
   return (
     <div className="px-4 min-h-[calc(100vh-3.5rem)] flex flex-col">
@@ -116,14 +122,15 @@ export function CardSelectionView({ sites, onConfirm }: CardSelectionViewProps) 
         </motion.button>
       </div>
 
-      {/* Site Preview Modal */}
+      {/* Embedded Site Viewer */}
       {previewSite && (
-        <SitePreviewModal
+        <SiteViewer
           site={previewSite}
           isOpen={!!previewSite}
           onClose={() => setPreviewSite(null)}
           onKeep={handleKeepFromPreview}
           isKept={keptSiteIds.has(previewSite.id)}
+          onEngagement={handleEngagement}
         />
       )}
 

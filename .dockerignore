@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+*.md
+.env*
+supabase
+scripts
+autoresearch-master copy
+*.docx
+*.xlsx

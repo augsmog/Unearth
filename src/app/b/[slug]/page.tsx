@@ -1,8 +1,8 @@
 import { adminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { PublicBoardGrid } from "@/components/board/PublicBoardGrid";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -109,59 +109,8 @@ export default async function PublicBoardPage({ params }: Props) {
           )}
         </div>
 
-        {/* Sites grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sites.map(
-            (site: {
-              id: string;
-              url: string;
-              title: string;
-              description: string;
-              thumbnail_url: string;
-              categories: string[];
-            }) => (
-              <a
-                key={site.id}
-                href={site.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-xl overflow-hidden transition-transform hover:scale-[1.02]"
-                style={{
-                  background: "var(--bg-elevated)",
-                  border: "1px solid var(--border-subtle)",
-                }}
-              >
-                {site.thumbnail_url && (
-                  <div className="relative aspect-video">
-                    <Image
-                      src={site.thumbnail_url}
-                      alt={site.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                    />
-                  </div>
-                )}
-                <div className="p-3">
-                  <h3
-                    className="text-sm font-semibold line-clamp-2"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {site.title}
-                  </h3>
-                  {site.description && (
-                    <p
-                      className="text-xs mt-1 line-clamp-2"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      {site.description}
-                    </p>
-                  )}
-                </div>
-              </a>
-            )
-          )}
-        </div>
+        {/* Sites grid — opens in embedded viewer */}
+        <PublicBoardGrid sites={sites} />
       </div>
 
       {/* Signup CTA banner */}
