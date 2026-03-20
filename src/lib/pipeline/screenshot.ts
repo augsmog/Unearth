@@ -14,9 +14,16 @@ const SCREENSHOT_BUCKET = 'Screenshots';
 export async function captureScreenshot(
   url: string,
   siteId: string
-): Promise<string> {
+): Promise<string | null> {
   // Dynamic import to avoid bundling playwright in the client
-  const { chromium } = await import('playwright');
+  let chromium: Awaited<typeof import('playwright')>['chromium'];
+  try {
+    const pw = await import('playwright');
+    chromium = pw.chromium;
+  } catch {
+    console.warn('Playwright not available — screenshot capture disabled');
+    return null;
+  }
 
   let browser;
   try {

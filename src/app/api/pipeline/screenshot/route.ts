@@ -8,6 +8,14 @@ function validateApiKey(request: NextRequest): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  // Playwright requires Chromium (~280MB) which exceeds Vercel's 50MB serverless limit
+  if (process.env.VERCEL) {
+    return Response.json(
+      { error: 'Screenshot capture unavailable in serverless environment. Use n8n pipeline or local script instead.' },
+      { status: 503 }
+    );
+  }
+
   if (!validateApiKey(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
